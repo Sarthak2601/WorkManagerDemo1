@@ -2,6 +2,7 @@ package com.sarthak.workmanagerdemo1
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.lifecycle.Observer
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import kotlinx.android.synthetic.main.activity_main.*
@@ -18,5 +19,8 @@ class MainActivity : AppCompatActivity() {
         val oneTimeWorkRequest = OneTimeWorkRequest.Builder(UploadWorkManager::class.java).build()
         val workManager = WorkManager.getInstance(applicationContext)
         workManager.enqueue(oneTimeWorkRequest)
+        workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id).observe(this, Observer {
+            textView.text = it.state.name
+        })
     }
 }
