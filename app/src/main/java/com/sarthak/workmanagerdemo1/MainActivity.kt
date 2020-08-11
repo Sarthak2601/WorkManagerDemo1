@@ -37,14 +37,19 @@ class MainActivity : AppCompatActivity() {
 
         val filteringWorkerRequest = OneTimeWorkRequest.Builder(FilteringWorker::class.java).build()
         val compressingWorkerRequest = OneTimeWorkRequest.Builder(CompressingWorker::class.java).build()
+        val downloadingWorkerRequest = OneTimeWorkRequest.Builder(DownloadingWorker::class.java).build()
 
+        // We can use this mutable list to set up parallel requests at the same time.
+        val parallelWorks = mutableListOf<OneTimeWorkRequest>()
+        parallelWorks.add(filteringWorkerRequest)
+        parallelWorks.add(downloadingWorkerRequest)
         val workManager = WorkManager.getInstance(applicationContext)
 
         //workManager.enqueue(uploadWorkerRequest) // Enqueuing the work request using the work manager instance.
 
 
         // Chains the three work requests together.
-        workManager.beginWith(filteringWorkerRequest)
+        workManager.beginWith(parallelWorks)
             .then(compressingWorkerRequest)
             .then(uploadWorkerRequest)
             .enqueue()
