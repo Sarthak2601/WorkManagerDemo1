@@ -30,15 +30,27 @@ class MainActivity : AppCompatActivity() {
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
         // Creates a one time work request corresponding to the uploading work manager class.
-        val oneTimeWorkRequest = OneTimeWorkRequest.Builder(UploadWorkManager::class.java)
+        val uploadWorkerRequest = OneTimeWorkRequest.Builder(UploadWorkManager::class.java)
             .setConstraints(constraints)
             .setInputData(inputData)
             .build()
 
+        val filteringWorkerRequest = OneTimeWorkRequest.Builder(FilteringWorker::class.java).build()
+        val compressingWorkerRequest = OneTimeWorkRequest.Builder(CompressingWorker::class.java).build()
+
         val workManager = WorkManager.getInstance(applicationContext)
-        workManager.enqueue(oneTimeWorkRequest) // Enqueuing the work request using the work manager instance.
+
+        //workManager.enqueue(uploadWorkerRequest) // Enqueuing the work request using the work manager instance.
+
+
+        // Chains the three work requests together.
+        workManager.beginWith(filteringWorkerRequest)
+            .then(compressingWorkerRequest)
+            .then(uploadWorkerRequest)
+            .enqueue()
+
         // Getting work info by ID in the form of LiveData. We then observe these changes and display the workInfo's state name on the screen.
-        workManager.getWorkInfoByIdLiveData(oneTimeWorkRequest.id).observe(this, Observer {
+        workManager.getWorkInfoByIdLiveData(uploadWorkerRequest.id).observe(this, Observer {
             textView.text = it.state.name
             // Receiving data from the work manager.
             val receivedOutputValue = it.outputData.getString(UploadWorkManager.KEY_WORKER)
