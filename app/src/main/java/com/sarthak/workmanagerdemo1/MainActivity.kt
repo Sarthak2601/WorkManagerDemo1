@@ -6,10 +6,11 @@ import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.work.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
-    companion object{
+    companion object {
         const val KEY_CONSTANT = "key_constant"
     }
 
@@ -17,6 +18,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         button.setOnClickListener { setOneTimeWorkRequest() }
+        periodic.setOnClickListener { setPeriodicWorkRequest() }
     }
 
     private fun setOneTimeWorkRequest() {
@@ -36,8 +38,10 @@ class MainActivity : AppCompatActivity() {
             .build()
 
         val filteringWorkerRequest = OneTimeWorkRequest.Builder(FilteringWorker::class.java).build()
-        val compressingWorkerRequest = OneTimeWorkRequest.Builder(CompressingWorker::class.java).build()
-        val downloadingWorkerRequest = OneTimeWorkRequest.Builder(DownloadingWorker::class.java).build()
+        val compressingWorkerRequest =
+            OneTimeWorkRequest.Builder(CompressingWorker::class.java).build()
+        val downloadingWorkerRequest =
+            OneTimeWorkRequest.Builder(DownloadingWorker::class.java).build()
 
         // We can use this mutable list to set up parallel requests at the same time.
         val parallelWorks = mutableListOf<OneTimeWorkRequest>()
@@ -61,5 +65,23 @@ class MainActivity : AppCompatActivity() {
             val receivedOutputValue = it.outputData.getString(UploadWorkManager.KEY_WORKER)
             Toast.makeText(applicationContext, receivedOutputValue, Toast.LENGTH_SHORT).show()
         })
+    }
+
+    private fun setPeriodicWorkRequest() {
+        /**
+         * Periodic work request has 3 parts.
+         * The worker class
+         * Time interval
+         * The unit of that time interval
+         */
+
+        val periodicWorkRequest =
+            PeriodicWorkRequest.Builder(
+                UploadWorkManager::class.java,
+                16,
+                TimeUnit.MINUTES
+            ).build()
+
+        WorkManager.getInstance(this).enqueue(periodicWorkRequest)
     }
 }
